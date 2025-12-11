@@ -726,7 +726,105 @@ function exportCSV() {
 }
 
 function downloadReport() {
-    window.print();
+    // Ambil info staf
+    const stafBertugas = document.getElementById("inputStafBertugas").value || "__________";
+    const stafNormal = document.getElementById("inputStafNormal").value || "__________";
+    const stafShift = document.getElementById("inputStafShift").value || "__________";
+    const stafLebih = document.getElementById("inputStafLebihMasa").value || "__________";
+    const tarikh = document.getElementById("tarikhJanaan").textContent || new Date().toLocaleDateString('ms-MY');
+
+    // ✅ GUNA payments dari FIREBASE (bukan localStorage)
+    const allData = payments || [];
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+
+    // Filter tarikh SAMA macam generateReport()
+    let filtered = allData.filter(p => {
+        if (!startDate && !endDate) return true;
+        const paymentDate = new Date(p.datetime);
+        paymentDate.setHours(0, 0, 0, 0);
+        const start = startDate ? new Date(startDate + 'T00:00:00') : null;
+        const end = endDate ? new Date(endDate + 'T23:59:59.999') : null;
+        return (!start || paymentDate >= start) && (!end || paymentDate <= end);
+    });
+
+    if(filtered.length === 0) {
+        alert("Tiada data untuk laporan berdasarkan filter semasa.");
+        return;
+    }
+
+    // Build table rows
+    let rowsHTML = "";
+    let totalHP = 0, totalWarna = 0, grandTotal = 0;
+
+    filtered.forEach((p, i) => {
+        const hp = p.color === "Hitam Putih" ? parseFloat(p.total) : 0;
+        const warna = p.color !== "Hitam Putih" ? parseFloat(p.total) : 0;
+        totalHP += hp; totalWarna += warna; grandTotal += parseFloat(p.total);
+
+        rowsHTML += `
+        <tr style="background-color: #f8f9fa;">
+            <td style="border:2px solid #333; padding:10px;">${i + 1}</td>
+            <td style="border:2px solid #333; padding:10px;">${p.id}</td>
+            <td style="border:2px solid #333; padding:10px;">${p.name}</td>
+            <td style="border:2px solid #333; padding:10px;">RM ${hp.toFixed(2)}</td>
+            <td style="border:2px solid #333; padding:10px;">RM ${warna.toFixed(2)}</td>
+            <td style="border:2px solid #333; padding:10px; font-weight:500;">${p.paymentDate}</td>
+            <td style="border:2px solid #333; padding:10px;">${p.manualReceipt || ""}</td>
+        </tr>`;
+    });
+
+    rowsHTML += `
+    <tr style="background: #4e2a7b !important; color: white !important;">
+        <td colspan="3" style="text-align:right; padding:15px; font-weight:bold; font-size:14px; border:2px solid #333;">Jumlah Keseluruhan</td>
+        <td style="padding:15px; font-weight:bold; font-size:14px; border:2px solid #333;">RM ${totalHP.toFixed(2)}</td>
+        <td style="padding:15px; font-weight:bold; font-size:14px; border:2px solid #333;">RM ${totalWarna.toFixed(2)}</td>
+        <td style="padding:15px; font-weight:bold; font-size:14px; border:2px solid #333;">RM ${grandTotal.toFixed(2)}</td>
+        <td style="border:2px solid #333;"></td>
+    </tr>`;
+
+    // HTML lengkap (sama macam kod asal)
+    const reportHTML = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Laporan Bayaran Print - ${new Date().toISOString().slice(0,10)}</title>
+<style>
+body{font-family:Arial,sans-serif;margin:30px;font-size:13px;color:#333}
+.header{text-align:center;margin-bottom:40px;border-bottom:4px solid #4e2a7b;padding-bottom:30px}
+.logo{height:80px;margin-bottom:15px}
+h1{color:#4e2a7b;font-size:28px}
+.staf-info{display:flex;justify-content:space-between;margin:30px 0;padding:25px;background:#f8f9fa;border-radius:12px}
+table{width:100%;border-collapse:collapse;margin:30px 0}
+th,td{border:2px solid #333;padding:12px 8px;text-align:center}
+th{background:#4e2a7b;color:white;font-weight:bold}
+.signature{display:flex;justify-content:space-between;margin-top:70px;gap:40px}
+.sig-box{flex:1;text-align:center;padding:30px;border:3px solid #4e2a7b;border-radius:15px}
+@page{margin:1.5cm}
+</style></head>
+<body>
+<div class="header">
+    <img src="https://www.teamcetak.com/wp-content/uploads/2019/03/uitm-universiti-teknologi-mara-logo-png-transparent.png" class="logo">
+    <h1>LAPORAN BAYARAN PRINT</h1>
+    <p style="font-size:15px;font-weight:600">Perpustakaan Al-Bukhari, UiTM Cawangan Pahang</p>
+</div>
+<div class="staf-info">
+    <div><img src="https://www.teamcetak.com/wp-content/uploads/2019/03/uitm-universiti-teknologi-mara-logo-png-transparent.png" style="height:60px">
+    <div><strong>Staf Bertugas:</strong> ${stafBertugas}<br><strong>Kerja Normal:</strong> ${stafNormal}<br><strong>Kerja Shift:</strong> ${stafShift}<br><strong>Kerja Lebih Masa:</strong> ${stafLebih}</div></div>
+    <div style="text-align:right"><strong>Tarikh Janaan:</strong><br><span style="font-size:18px;font-weight:bold;color:#4e2a7b">${tarikh}</span></div>
+</div>
+<table><thead><tr><th style="width:5%">Bil.</th><th style="width:12%">No Pelajar</th><th style="width:20%">Nama</th><th style="width:10%">RM Hitam<br>Putih</th><th style="width:10%">RM Warna</th><th style="width:16%">Tarikh Bayaran</th><th style="width:17%">No Resit</th></tr></thead><tbody>${rowsHTML}</tbody></table>
+<div class="signature">
+    <div class="sig-box"><div style="font-weight:bold;font-size:16px;margin-bottom:40px;color:#4e2a7b">PENGESAHAN PEGAWAI PERPUSTAKAAN</div><div style="height:1px;border-bottom:2px solid #333;margin:0 auto 20px;width:280px"></div><div style="margin-top:15px;font-size:13px">(Tandatangan & Cop Pegawai)</div></div>
+    <div class="sig-box"><div style="font-weight:bold;font-size:16px;margin-bottom:40px;color:#4e2a7b">PENGESAHAN BENDAHARI</div><div style="height:1px;border-bottom:2px solid #333;margin:0 auto 20px;width:280px"></div><div style="margin-top:15px;font-size:13px">(Tandatangan & Cop Bendahari)</div></div>
+</div>
+</body></html>`;
+
+    const blob = new Blob([reportHTML], {type: 'text/html;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Laporan_Print_${new Date().toISOString().slice(0,10)}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+    alert("✅ Laporan dimuat turun!\nBuka HTML → Ctrl+P → Save as PDF");
 }
 
 
