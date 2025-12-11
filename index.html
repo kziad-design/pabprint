@@ -563,13 +563,17 @@
     // Expose functions globally
     window.addPayment = addPayment;
     window.closePaymentPopup = closePaymentPopup;
+window.staffLogin = staffLogin;
+window.cancelStaffLogin = cancelStaffLogin;
+window.staffLogout = staffLogout;
+
 // ====== STAFF LOGIN (Tambah ni) ======
-window.staffLogin = staffLogin; {
+// ====== STAFF LOGIN ======
+function staffLogin() {
     if(document.getElementById("staffPassword").value === STAFF_PASSWORD) {
         document.getElementById("loginContainer").style.display = "none";
         document.getElementById("adminSection").style.display = "block";
         document.getElementById("tarikhJanaan").textContent = new Date().toLocaleDateString('ms-MY');
-        // Nanti generateReport kita tambah
         console.log('✅ Staff login OK');
     } else {
         alert("❌ Password salah!");
@@ -577,13 +581,20 @@ window.staffLogin = staffLogin; {
     }
 }
 
-window.cancelStaffLogin = cancelStaffLogin; {
+function cancelStaffLogin() {
     document.getElementById("loginContainer").style.display = "none";
     document.getElementById("staffPassword").value = "";
 }
 
-window.staffLogout = staffLogout; {
+function staffLogout() {
     document.getElementById("adminSection").style.display = "none";
+}
+
+// Expose ke global
+window.staffLogin = staffLogin;
+window.cancelStaffLogin = cancelStaffLogin;
+window.staffLogout = staffLogout;
+
 }
 
 // ====== GENERATE REPORT DARI FIREBASE ======
