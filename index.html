@@ -644,6 +644,33 @@
             </tr>`;
     }
 
+function clearDateFilter() {
+    document.getElementById("startDate").value = "";
+    document.getElementById("endDate").value = "";
+    generateReport();
+}
+
+function updateManualReceipt(index, value) {
+    const p = payments[index];
+    if (!p || !p._id) return;
+    firebase.database().ref("payments/" + p._id).update({ manualReceipt: value.trim() });
+}
+// ====== FUNGSI LAIN UNTUK FILTER TARIKH ======
+function clearDateFilter() {
+    document.getElementById("startDate").value = "";
+    document.getElementById("endDate").value = "";
+    generateReport();
+}
+
+function updateManualReceipt(index, value) {
+    const p = payments[index];
+    if (!p || !p._id) return;
+    firebase.database().ref("payments/" + p._id).update({
+        manualReceipt: value.trim()
+    });
+}
+
+
     // ====== EXPOSE ALL FUNCTIONS TO GLOBAL (AKHIR SAJA) ======
     window.addPayment = addPayment;
     window.closePaymentPopup = closePaymentPopup;
