@@ -660,6 +660,75 @@ function updateManualReceipt(index, value) {
     });
 }
 
+// ====== FUNGSI EDIT, DELETE, EXPORT ======
+function startEdit(index) {
+    const p = payments[index];
+    if (!p) return;
+    editIndex = index;
+    document.getElementById("editName").value = p.name || "";
+    document.getElementById("editStudentId").value = p.id || "";
+    document.getElementById("editCopies").value = p.copies || 1;
+    document.getElementById("editPaper").value = p.paper ? p.paper.split("|")[0] : "0.20";
+    document.getElementById("editColor").value = p.color || "Hitam Putih";
+    document.getElementById("editModal").style.display = "flex";
+}
+
+function closeEditModal() {
+    document.getElementById("editModal").style.display = "none";
+    editIndex = null;
+}
+
+function saveEdit() {
+    if (editIndex === null) return;
+    const p = payments[editIndex];
+    if (!p || !p._id) return;
+    
+    const newData = {
+        name: document.getElementById("editName").value.trim(),
+        id: document.getElementById("editStudentId").value.trim(),
+        copies: parseInt(document.getElementById("editCopies").value),
+        paper: document.getElementById("editPaper").options[document.getElementById("editPaper").selectedIndex].text,
+        color: document.getElementById("editColor").value,
+        total: payments[editIndex].total, // kekalkan total asal
+        datetime: payments[editIndex].datetime,
+        paymentDate: payments[editIndex].paymentDate
+    };
+    
+    firebase.database().ref("payments/" + p._id).update(newData).then(() => {
+        closeEditModal();
+        generateReport();
+    });
+}
+
+function deletePayment(index) {
+    const p = payments[index];
+    if (!p || !p._id) return;
+    if (confirm(`Padam rekod ${p.name}?`)) {
+        firebase.database().ref("payments/" + p._id).remove();
+    }
+}
+
+function softReset() {
+    document.getElementById("reportBody").innerHTML = "<tr><td colspan='8' style='color:#999; font-style:italic; padding:40px;'>Tiada data. Klik Generate Report.</td></tr>";
+}
+
+function exportCSV() {
+    let csv = "Bil,No Pelajar,Nama,RM Hitam Putih,RM Warna,Tarikh,No Resit\n";
+    payments.forEach((p, i) => {
+        const hp = p.color === "Hitam Putih" ? p.total : 0;
+        const warna = p.color !== "Hitam Putih" ? p.total : 0;
+        csv += `${i+1},"${p.id}","${p.name}",${hp},${warna},"${p.paymentDate}","${p.manualReceipt || ''}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'laporan-print.csv'; a.click();
+}
+
+function downloadReport() {
+    window.print();
+}
+
 
     // ====== EXPOSE ALL FUNCTIONS TO GLOBAL (AKHIR SAJA) ======
     window.addPayment = addPayment;
