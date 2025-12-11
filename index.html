@@ -564,7 +564,7 @@
     window.addPayment = addPayment;
     window.closePaymentPopup = closePaymentPopup;
 // ====== STAFF LOGIN (Tambah ni) ======
-function staffLogin() {
+window.staffLogin = staffLogin; {
     if(document.getElementById("staffPassword").value === STAFF_PASSWORD) {
         document.getElementById("loginContainer").style.display = "none";
         document.getElementById("adminSection").style.display = "block";
@@ -577,12 +577,12 @@ function staffLogin() {
     }
 }
 
-function cancelStaffLogin() {
+window.cancelStaffLogin = cancelStaffLogin; {
     document.getElementById("loginContainer").style.display = "none";
     document.getElementById("staffPassword").value = "";
 }
 
-function staffLogout() {
+window.staffLogout = staffLogout; {
     document.getElementById("adminSection").style.display = "none";
 }
 
