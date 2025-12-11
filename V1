@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<title>Sistem Bayaran Print Perpustakaan UiTM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: linear-gradient(135deg, #4e2a7b 0%, #6b4e9a 100%);
+        color: #fff;
+        font-size: 12px;
+        min-height: 100vh;
+    }
+    header {
+        text-align: center;
+        padding: 25px 15px;
+        background: #a0a0a0;
+        color: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    header img {
+        height: 80px;
+        display: block;
+        margin: 0 auto 15px auto;
+    }
+    header h2 {
+        margin: 8px 0;
+        font-size: 20px;
+        font-weight: bold;
+    }
+    header div {
+        font-size: 13px;
+        opacity: 0.9;
+    }
+    .wrap {
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+        display: flex;
+        gap: 25px;
+    }
+    #leftPanel {
+        width: 350px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    #rightPanel {
+        flex: 1;
+        min-width: 600px;
+        display: flex;
+        flex-direction: column;
+    }
+    .card {
+        background: white;
+        color: #333;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        font-size: 12px;
+    }
+    label {
+        font-weight: 600;
+        display: block;
+        margin-top: 8px;
+        color: #555;
+        font-size: 11px;
+    }
+    input, select, button {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        margin-bottom: 12px;
+        font-size: 13px;
+        box-sizing: border-box;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    input:focus, select:focus {
+        outline: none;
+        border-color: #4e2a7b;
+        box-shadow: 0 0 0 3px rgba(78,42,123,0.1);
+    }
+    button {
+        cursor: pointer;
+        background: linear-gradient(135deg, #4e2a7b, #6b4e9a);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.3s;
+        height: 45px;
+    }
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(78,42,123,0.4);
+    }
+    .btn-secondary { background: #6c757d; }
+    .btn-secondary:hover { box-shadow: 0 8px 25px rgba(108,117,125,0.4); }
+    .btn-warning { background: linear-gradient(135deg, #ffc107, #ffed4e); color: #333; }
+    .btn-info { background: linear-gradient(135deg, #17a2b8, #20c997); }
+    .btn-danger { background: linear-gradient(135deg, #dc3545, #e74c3c); }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        font-size: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    th, td {
+        padding: 12px 8px;
+        border: 1px solid #ddd;
+        text-align: center;
+        vertical-align: middle;
+    }
+    th {
+        background: linear-gradient(135deg, #4e2a7b, #6b4e9a);
+        color: white;
+        font-weight: 600;
+        font-size: 12px;
+    }
+    .action-btn {
+        padding: 6px 12px;
+        margin: 2px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 500;
+    }
+    .edit-btn { background: #ffc107; color: #333; }
+    .delete-btn { background: #dc3545; color: white; }
+    /* SCROLL TABLE BARU */
+    #reportTableContainer {
+        max-height: 350px;
+        overflow-y: auto;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        background: white;
+    }
+    #reportTableContainer::-webkit-scrollbar {
+        width: 8px;
+    }
+    #reportTableContainer::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    #reportTableContainer::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #4e2a7b, #6b4e9a);
+        border-radius: 10px;
+    }
+    #reportTable thead {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    #paymentPopup {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        backdrop-filter: blur(5px);
+    }
+    #popupBox {
+        background: white;
+        padding: 30px;
+        width: 90%;
+        max-width: 400px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        transform: scale(0.7);
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        color: #333;
+    }
+    .popup-show {
+        transform: scale(1) !important;
+        opacity: 1 !important;
+    }
+    #editModal {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.7);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        backdrop-filter: blur(3px);
+    }
+    #editBox {
+        background: white;
+        padding: 25px;
+        width: 90%;
+        max-width: 450px;
+        border-radius: 15px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        transform: translateY(50px);
+        transition: all 0.3s;
+    }
+    #adminSection { display: none; }
+    .report-header {
+        text-align: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid #4e2a7b;
+    }
+    .staf-panel {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+        padding: 20px;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+    }
+    .staf-left { display: flex; gap: 20px; align-items: center; }
+    .staf-right { text-align: right; }
+    .total-row {
+        background: linear-gradient(135deg, #4e2a7b, #6b4e9a) !important;
+        color: white !important;
+        font-weight: bold !important;
+        font-size: 13px;
+    }
+    @media print {
+        body { background: white !important; color: black !important; }
+        .wrap { display: block !important; max-width: none; }
+        #leftPanel, button, .action-btn, #reportTableContainer { display: none !important; }
+        #adminSection { display: block !important; }
+        input { border: none !important; background: transparent !important; font-weight: bold; }
+    }
+    @media (max-width: 1000px) {
+        .wrap { flex-direction: column; }
+        #leftPanel { width: 100%; }
+    }
+</style>
+</head>
+<body>
+<!-- =================== POPUP BAYARAN =================== -->
+<div id="paymentPopup">
+    <div id="popupBox">
+        <h3 style="margin:0 0 15px 0; color:#28a745; font-size: 22px;">✅ Berjaya Di Rekodkan!</h3>
+        <p id="popupName" style="font-size:16px; font-weight:600; margin:5px 0;"></p>
+        <p id="popupId" style="font-size:14px; color:#666; margin:5px 0;"></p>
+        <p id="popupTotal" style="font-size:32px; font-weight:bold; color:#28a745; margin:15px 0;"></p>
+        <p id="popupDate" style="font-size:13px; color:#888;"></p>
+        <button onclick="closePaymentPopup()" 
+                style="background:linear-gradient(135deg,#28a745,#20c997); color:white; padding:15px 30px; margin-top:20px; width:100%; border:none; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; box-shadow:0 8px 25px rgba(40,167,69,0.4);">
+            OK
+        </button>
+    </div>
+</div>
+
+<!-- =================== MODAL EDIT =================== -->
+<div id="editModal">
+    <div id="editBox">
+        <h3 style="margin-top:0; color:#4e2a7b;">✏️ Edit Bayaran</h3>
+        <label>Nama Pelanggan:</label><input id="editName">
+        <label>No Pelajar/ID:</label><input id="editStudentId">
+        <label>Bilangan Salinan:</label><input id="editCopies" type="number" min="1">
+        <label>Jenis Kertas:</label>
+        <select id="editPaper">
+            <option value="0.20|📄 A4 RM0.20">📄 A4 RM0.20</option>
+            <option value="0.30|📄 A4 depan belakang RM0.30">📄 A4 depan belakang RM0.30</option>
+            <option value="1.00|🌈 A4 Warna RM1.00">🌈 A4 Warna RM1.00</option>
+            <option value="2.00|🌈 A4 Warna depan belakang RM2.00">🌈 A4 Warna depan belakang RM2.00</option>
+            <option value="0.10|📄 A4 Kertas Sendiri RM0.10">📄 A4 Kertas Sendiri RM0.10</option>
+            <option value="0.20|📄 A4 Kertas Sendiri depan belakang RM0.20">📄 A4 Kertas Sendiri depan belakang RM0.20</option>
+            <option value="0.40|📐 A3 RM0.40">📐 A3 RM0.40</option>
+            <option value="0.60|📐 A3 depan belakang RM0.60">📐 A3 depan belakang RM0.60</option>
+            <option value="1.00|🌈 A3 Warna RM1.00">🌈 A3 Warna RM1.00</option>
+            <option value="2.00|🌈 A3 Warna depan belakang RM2.00">🌈 A3 Warna depan belakang RM2.00</option>
+            <option value="0.10|📐 A3 Kertas Sendiri RM0.10">📐 A3 Kertas Sendiri RM0.10</option>
+            <option value="0.20|📐 A3 Kertas Sendiri depan belakang RM0.20">📐 A3 Kertas Sendiri depan belakang RM0.20</option>
+        </select>
+        <label>Jenis Warna:</label>
+        <select id="editColor">
+            <option value="Hitam Putih">Hitam Putih</option>
+            <option value="Warna">Warna</option>
+        </select>
+        <div style="display:flex; gap:12px; margin-top:20px;">
+            <button onclick="saveEdit()" style="flex:1; background:linear-gradient(135deg,#28a745,#20c997);">💾 Simpan</button>
+            <button onclick="closeEditModal()" class="btn-secondary" style="flex:1;">❌ Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- =================== HEADER UTAMA =================== -->
+<header>
+    <img src="https://www.teamcetak.com/wp-content/uploads/2019/03/uitm-universiti-teknologi-mara-logo-png-transparent.png" alt="Logo UiTM">
+    <h2>🖨️ Sistem Rekod Bayaran Print Perpustakaan</h2>
+    <div>Perpustakaan Al-Bukhari | UiTM Cawangan Pahang</div>
+</header>
+
+<!-- =================== KANDUNGAN UTAMA =================== -->
+<div class="wrap">
+    <!-- ========== PANEL KIRI: BORANG BAYARAN ========== -->
+    <div id="leftPanel">
+        <div class="card" id="paymentContainer">
+            <h3 style="margin-top:0; color:#4e2a7b; display:flex; align-items:center; gap:10px;">
+                Rekod Bayaran Print
+            </h3>
+            <label>Nama Pelanggan:</label>
+            <input id="name" placeholder="Masukkan nama lengkap pelanggan">
+            <label>No Pelajar / Staf / Luar:</label>
+            <input id="studentId" placeholder="Contoh: 2020123456 / ST001 / LUAR001">
+            <label>Bilangan Salinan:</label>
+            <input id="copies" type="number" value="1" min="1">
+            <label>Jenis Kertas:</label>
+            <select id="paper">
+                <option value="0.20">📄 A4 RM0.20</option>
+                <option value="0.30">📄 A4 depan belakang RM0.30</option>
+                <option value="1.00">🌈 A4 Warna RM1.00</option>
+                <option value="2.00">🌈 A4 Warna depan belakang RM2.00</option>
+                <option value="0.10">📄 A4 Kertas Sendiri RM0.10</option>
+                <option value="0.20">📄 A4 Kertas Sendiri depan belakang RM0.20</option>
+                <option value="0.40">📐 A3 RM0.40</option>
+                <option value="0.60">📐 A3 depan belakang RM0.60</option>
+                <option value="1.00">🌈 A3 Warna RM1.00</option>
+                <option value="2.00">🌈 A3 Warna depan belakang RM2.00</option>
+                <option value="0.10">📐 A3 Kertas Sendiri RM0.10</option>
+                <option value="0.20">📐 A3 Kertas Sendiri depan belakang RM0.20</option>
+            </select>
+            <label>Jenis Warna:</label>
+            <select id="color">
+                <option value="Hitam Putih">⚫ Hitam Putih</option>
+                <option value="Warna">🌈 Warna</option>
+            </select>
+            <button onclick="addPayment()">Hantar</button>
+            <div style="background:#f8f9fa; padding:15px; border-radius:8px; margin-top:15px; font-size:11px; text-align:center; color:#333;">
+                <strong>🔐 Akses Staf/Report:</strong><br>
+                Tekan <kbd style="background:#4e2a7b; color:white; padding:2px 6px; border-radius:4px;">Alt + S</kbd>
+            </div>
+        </div>
+
+        <!-- ========== LOGIN STAF ( tersembunyi ) ========== -->
+        <div class="card" id="loginContainer" style="display:none;">
+            <h3 style="margin-top:0; color:#dc3545;">🔐 Login Staf Perpustakaan</h3>
+            <label>Password Staf:</label>
+            <input id="staffPassword" type="password" placeholder="Masukkan kata laluan staf">
+            <button onclick="staffLogin()" style="background:linear-gradient(135deg,#dc3545,#e74c3c);">🔑 Masuk</button>
+            <button onclick="cancelStaffLogin()" class="btn-secondary">❌ Batal</button>
+            <div style="font-size:10px; color:#666; text-align:center; margin-top:10px;">
+                Akses khusus pegawai perpustakaan sahaja
+            </div>
+        </div>
+    </div>
+    <!-- ========== PANEL KANAN: REPORT ADMIN ========== -->
+    <div id="rightPanel">
+        <div class="card" id="adminSection" style="display:none;">
+            <!-- HEADER REPORT -->
+            <div class="report-header">
+                <h3 style="margin:0; color:#4e2a7b; font-size:24px;">LAPORAN BAYARAN PRINT</h3>
+                <p style="margin:5px 0 0 0; font-size:13px; color:#666;">Perpustakaan Al-Bukhari, UiTM Cawangan Pahang</p>
+            </div>
+
+            <!-- INFO STAF & TARIKH -->
+            <div class="staf-panel">
+                <div class="staf-left">
+                    <img src="https://www.teamcetak.com/wp-content/uploads/2019/03/uitm-universiti-teknologi-mara-logo-png-transparent.png" style="height:50px;">
+                    <div>
+                        <label style="margin-top:0;">Staf Bertugas:</label>
+                        <input id="inputStafBertugas" type="text" placeholder="Nama staf bertugas">
+                        <label>Kerja Normal:</label>
+                        <input id="inputStafNormal" type="text" placeholder="Nama staf normal">
+                    </div>
+                </div>
+                <div class="staf-right">
+                    <label>Kerja Shift:</label>
+                    <input id="inputStafShift" type="text" placeholder="Nama staf shift">
+                    <label>Kerja Lebih Masa:</label>
+                    <input id="inputStafLebihMasa" type="text" placeholder="Nama lebih masa">
+                    <div style="margin-top:15px; padding:12px; background:#4e2a7b; color:white; border-radius:8px; text-align:center;">
+                        <strong>Tarikh Janaan Report:</strong><br>
+                        <span id="tarikhJanaan" style="font-size:16px; font-weight:bold;"></span>
+                    </div>
+                </div>
+            </div>
+
+    <!-- FILTER & BUTANG (versi kolum, butang di bawah) -->
+<div style="margin-bottom:20px;">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:10px;">
+        <div>
+            <label>Tarikh Mula:</label>
+            <input id="startDate" type="date">
+        </div>
+        <div>
+            <label>Tarikh Tamat:</label>
+            <input id="endDate" type="date">
+        </div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-start;">
+        <button onclick="generateReport()" style="height:40px; min-width:150px;">🔍 Generate Report</button>
+        <button onclick="clearDateFilter()" class="btn-secondary" style="height:40px; min-width:150px;">🗑️ Kosong Filter</button>
+    </div>
+</div>
+
+
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-bottom:25px;">
+                <button onclick="exportCSV()" class="btn-info">📥 Export CSV</button>
+                <button onclick="downloadReport()" class="btn-warning">📄 Download Laporan</button>
+                <button onclick="softReset()" class="btn-secondary">🗑️ Kosong Paparan</button>
+                <button onclick="staffLogout()" style="background:linear-gradient(135deg,#6c757d,#495057);">🚪 Logout</button>
+            </div>
+
+            <!-- JADUAL REPORT DENGAN TARIKH BAYARAN + SCROLL -->
+            <div id="reportTableContainer">
+                <table id="reportTable">
+                    <thead>
+                        <tr>
+                            <th style="width:5%;">Bil.</th>
+                            <th style="width:12%;">No Pelajar</th>
+                            <th style="width:20%;">Nama</th>
+                            <th style="width:10%;">RM Hitam<br>Putih</th>
+                            <th style="width:10%;">RM Warna</th>
+                            <th style="width:16%;">Tarikh Bayaran</th> <!-- TAMBAH KOLUM TARIKH -->
+                            <th style="width:12%;">No Resit<br>(Manual)</th>
+                            <th style="width:15%;">Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportBody">
+                        <tr><td colspan="8" style="color:#999; font-style:italic; padding:40px; font-size:14px;">Tiada data. Klik Generate Report untuk paparan lengkap.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let payments = JSON.parse(localStorage.getItem("payments") || "[]");
+let editIndex = null;
+const STAFF_PASSWORD = "1234";
+
+/* ========= POPUP BAYARAN ========= */
+function closePaymentPopup(){
+    const popup = document.getElementById("paymentPopup");
+    const box = document.getElementById("popupBox");
+    box.classList.remove("popup-show");
+    setTimeout(() => popup.style.display = "none", 400);
+}
+
+function addPayment() {
+    const name = document.getElementById("name").value.trim();
+    const id = document.getElementById("studentId").value.trim();
+    const copies = parseInt(document.getElementById("copies").value);
+    const paperSelect = document.getElementById("paper");
+    const paperPrice = parseFloat(paperSelect.value);
+    const color = document.getElementById("color").value;
+
+    if(!name || !id || copies < 1) {
+        alert("❌ Sila lengkapkan semua maklumat!");
+        return;
+    }
+
+    const total = (paperPrice * copies).toFixed(2);
+    const now = new Date();
+    const current = JSON.parse(localStorage.getItem("payments") || "[]");
+    const receipt = "R" + String(current.length + 1).padStart(3, "0");
+
+    // TAMBAH FORMAT TARIKH BAYARAN
+    const paymentDate = now.toLocaleDateString('ms-MY', {
+        day: '2-digit',
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    const payment = {
+        receipt, name, id, copies,
+        paper: paperSelect.options[paperSelect.selectedIndex].text,
+        color, total, 
+        datetime: now.toISOString(),     // untuk filter tarikh
+        paymentDate: paymentDate,        // TAMBAH: untuk papar tarikh
+        manualReceipt: ""
+    };
+
+    current.push(payment);
+    localStorage.setItem("payments", JSON.stringify(current));
+
+    // Popup dengan tarikh bayaran
+    document.getElementById("popupName").textContent = name;
+    document.getElementById("popupId").textContent = `No Pelajar: ${id}`;
+    document.getElementById("popupTotal").textContent = `RM ${total}`;
+    document.getElementById("popupDate").textContent = `Tarikh: ${paymentDate}`;
+
+    const popup = document.getElementById("paymentPopup");
+    const box = document.getElementById("popupBox");
+    popup.style.display = "flex";
+    box.classList.remove("popup-show");
+    setTimeout(() => box.classList.add("popup-show"), 100);
+
+    // Auto close after 3s
+    setTimeout(() => {
+        box.classList.remove("popup-show");
+        setTimeout(() => popup.style.display = "none", 400);
+    }, 3000);
+
+    // Reset form
+    document.getElementById("name").value = "";
+    document.getElementById("studentId").value = "";
+    document.getElementById("copies").value = 1;
+}
+
+/* ========= STAF LOGIN ========= */
+function staffLogin() {
+    if(document.getElementById("staffPassword").value === STAFF_PASSWORD) {
+        document.getElementById("loginContainer").style.display = "none";
+        document.getElementById("adminSection").style.display = "block";
+        document.getElementById("tarikhJanaan").textContent = new Date().toLocaleDateString('ms-MY');
+        generateReport();
+    } else {
+        alert("❌ Password salah!");
+        document.getElementById("staffPassword").value = "";
+    }
+}
+
+function cancelStaffLogin() {
+    document.getElementById("loginContainer").style.display = "none";
+    document.getElementById("staffPassword").value = "";
+}
+
+function staffLogout() {
+    document.getElementById("adminSection").style.display = "none";
+}
+/* ========= REPORT GENERATION DENGAN TARIKH BAYARAN ========= */
+function generateReport() {
+    const tbody = document.getElementById("reportBody");
+    tbody.innerHTML = "<tr><td colspan='8' style='padding:50px;'><div>⏳ Memuatkan data...</div></td></tr>";
+
+    const allData = JSON.parse(localStorage.getItem("payments") || "[]");
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+
+    // FILTER TARIKH YANG BETUL - HANYA BAHAGIAN TARIKH
+    let filtered = allData.filter(p => {
+        if (!startDate && !endDate) return true;
+        
+        const paymentDate = new Date(p.datetime);
+        paymentDate.setHours(0, 0, 0, 0); // Hanya tarikh, ignore masa
+        
+        const start = startDate ? new Date(startDate + 'T00:00:00') : null;
+        const end = endDate ? new Date(endDate + 'T23:59:59.999') : null;
+        
+        return (!start || paymentDate >= start) && (!end || paymentDate <= end);
+    });
+
+    document.getElementById("tarikhJanaan").textContent = new Date().toLocaleDateString('ms-MY');
+
+    if(filtered.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='8' style='color:#999; font-style:italic; padding:40px;'>Tiada rekod dalam julat tarikh ini</td></tr>";
+        return;
+    }
+
+    let totalHP = 0, totalWarna = 0, grandTotal = 0;
+    tbody.innerHTML = "";
+
+    filtered.forEach((payment, index) => {
+        const hp = payment.color === "Hitam Putih" ? parseFloat(payment.total) : 0;
+        const warna = payment.color !== "Hitam Putih" ? parseFloat(payment.total) : 0;
+
+        totalHP += hp;
+        totalWarna += warna;
+        grandTotal += parseFloat(payment.total);
+
+        const dataIndex = allData.findIndex(p => 
+            p.receipt === payment.receipt && p.datetime === payment.datetime
+        );
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${index + 1}</td>
+                <td style="font-size:11px;">${payment.id}</td>
+                <td style="font-size:11px;">${payment.name}</td>
+                <td>RM ${hp.toFixed(2)}</td>
+                <td>RM ${warna.toFixed(2)}</td>
+                <td style="font-size:11px; font-weight:500;">${payment.paymentDate}</td>
+                <td>
+                    <input type="text" value="${payment.manualReceipt || ''}" 
+                           onblur="updateManualReceipt(${dataIndex}, this.value)"
+                           style="width:95%; border:1px solid #ddd; padding:4px; border-radius:4px; font-size:11px;">
+                </td>
+                <td>
+                    <button class="action-btn edit-btn" onclick="startEdit(${dataIndex})">Edit</button>
+                    <button class="action-btn delete-btn" onclick="deletePayment(${dataIndex})">Padam</button>
+                </td>
+            </tr>`;
+    });
+
+    // TOTAL ROW
+    tbody.innerHTML += `
+        <tr class="total-row">
+            <td colspan="3" style="text-align:right; padding-right:15px;">Jumlah Keseluruhan</td>
+            <td>RM ${totalHP.toFixed(2)}</td>
+            <td>RM ${totalWarna.toFixed(2)}</td>
+            <td>RM ${grandTotal.toFixed(2)}</td>
+            <td colspan="2"></td>
+        </tr>`;
+}
+
+/* ========= QUICK FILTER FUNCTIONS ========= */
+function filterToday() {
+    const today = new Date().toISOString().slice(0, 10);
+    document.getElementById("startDate").value = today;
+    document.getElementById("endDate").value = today;
+    generateReport();
+}
+
+function filterThisWeek() {
+    const today = new Date();
+    const startWeek = new Date(today);
+    startWeek.setDate(today.getDate() - today.getDay());
+    document.getElementById("startDate").value = startWeek.toISOString().slice(0, 10);
+    document.getElementById("endDate").value = today.toISOString().slice(0, 10);
+    generateReport();
+}
+
+function filterThisMonth() {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    document.getElementById("startDate").value = firstDay.toISOString().slice(0, 10);
+    document.getElementById("endDate").value = today.toISOString().slice(0, 10);
+    generateReport();
+}
+
+function clearDateFilter() {
+    document.getElementById("startDate").value = "";
+    document.getElementById("endDate").value = "";
+    generateReport();
+}
+/* ========= UPDATE MANUAL RECEIPT ========= */
+function updateManualReceipt(index, value) {
+    const data = JSON.parse(localStorage.getItem("payments") || "[]");
+    if(data[index]) {
+        data[index].manualReceipt = value.trim();
+        localStorage.setItem("payments", JSON.stringify(data));
+    }
+}
+
+/* ========= EDIT FUNCTIONS ========= */
+function startEdit(index) {
+    const data = JSON.parse(localStorage.getItem("payments") || "[]");
+    if(!data[index]) return;
+
+    editIndex = index;
+    const p = data[index];
+
+    document.getElementById("editName").value = p.name || "";
+    document.getElementById("editStudentId").value = p.id || "";
+    document.getElementById("editCopies").value = p.copies || 1;
+
+    // Set paper type
+    const editPaperSelect = document.getElementById("editPaper");
+    for(let i = 0; i < editPaperSelect.options.length; i++) {
+        if(editPaperSelect.options[i].text === p.paper) {
+            editPaperSelect.selectedIndex = i;
+            break;
+        }
+    }
+
+    document.getElementById("editColor").value = p.color || "Hitam Putih";
+    
+    const modal = document.getElementById("editModal");
+    const box = document.getElementById("editBox");
+    modal.style.display = "flex";
+    box.style.transform = "translateY(0)";
+}
+
+function closeEditModal() {
+    const modal = document.getElementById("editModal");
+    const box = document.getElementById("editBox");
+    box.style.transform = "translateY(50px)";
+    setTimeout(() => modal.style.display = "none", 300);
+    editIndex = null;
+}
+
+function saveEdit() {
+    if(editIndex === null) return;
+
+    const data = JSON.parse(localStorage.getItem("payments") || "[]");
+    if(!data[editIndex]) return;
+
+    const name = document.getElementById("editName").value.trim();
+    const id = document.getElementById("editStudentId").value.trim();
+    const copies = parseInt(document.getElementById("editCopies").value) || 1;
+    
+    const paperData = document.getElementById("editPaper").value.split("|");
+    const price = parseFloat(paperData[0]);
+    const paperText = paperData[1];
+    const color = document.getElementById("editColor").value;
+
+    if(!name || !id || copies < 1) {
+        alert("❌ Sila lengkapkan semua maklumat untuk edit!");
+        return;
+    }
+
+    const total = (price * copies).toFixed(2);
+    const now = new Date();
+    const paymentDate = now.toLocaleDateString('ms-MY', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+
+    data[editIndex].name = name;
+    data[editIndex].id = id;
+    data[editIndex].copies = copies;
+    data[editIndex].paper = paperText;
+    data[editIndex].color = color;
+    data[editIndex].total = total;
+    data[editIndex].paymentDate = paymentDate;
+    data[editIndex].datetime = now.toISOString();
+
+    localStorage.setItem("payments", JSON.stringify(data));
+    closeEditModal();
+    generateReport();
+    alert("✅ Rekod berjaya dikemaskini!");
+}
+
+/* ========= DELETE PAYMENT ========= */
+function deletePayment(index) {
+    if(confirm("⚠️ Anda pasti mahu memadam rekod ini?\n\nNo Resit: " + 
+               JSON.parse(localStorage.getItem("payments") || "[]")[index]?.receipt)) {
+        let data = JSON.parse(localStorage.getItem("payments") || "[]");
+        data.splice(index, 1);
+        localStorage.setItem("payments", JSON.stringify(data));
+        generateReport();
+        alert("✅ Rekod berjaya dipadam.");
+    }
+}
+
+/* ========= SOFT RESET ========= */
+function softReset() {
+    if(confirm("Kosongkan paparan? Data masih tersimpan.")) {
+        const tbody = document.getElementById("reportBody");
+        tbody.innerHTML = 
+            "<tr><td colspan='8' style='color:#999; font-style:italic; padding:40px; font-size:14px;'>Report dikosongkan. Generate semula untuk papar.</td></tr>";
+    }
+}
+/* ========= DOWNLOAD REPORT HTML (PDF PRINT) ========= */
+function downloadReport() {
+    const stafBertugas = document.getElementById("inputStafBertugas").value || "__________";
+    const stafNormal = document.getElementById("inputStafNormal").value || "__________";
+    const stafShift = document.getElementById("inputStafShift").value || "__________";
+    const stafLebih = document.getElementById("inputStafLebihMasa").value || "__________";
+    const tarikh = document.getElementById("tarikhJanaan").textContent || new Date().toLocaleDateString('ms-MY');
+
+    // Ambil data dari localStorage
+    const allData = JSON.parse(localStorage.getItem("payments") || "[]");
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+
+    // Filter sama macam generateReport, ikut tarikh
+    let filtered = allData.filter(p => {
+        if (!startDate && !endDate) return true;
+
+        const paymentDate = new Date(p.datetime);
+        paymentDate.setHours(0, 0, 0, 0);
+
+        const start = startDate ? new Date(startDate + 'T00:00:00') : null;
+        const end = endDate ? new Date(endDate + 'T23:59:59.999') : null;
+
+        return (!start || paymentDate >= start) && (!end || paymentDate <= end);
+    });
+
+    if(filtered.length === 0) {
+        alert("Tiada data untuk laporan berdasarkan filter semasa.");
+        return;
+    }
+
+    let rowsHTML = "";
+    let totalHP = 0, totalWarna = 0, grandTotal = 0;
+
+    filtered.forEach((p, i) => {
+        const hp = p.color === "Hitam Putih" ? parseFloat(p.total) : 0;
+        const warna = p.color !== "Hitam Putih" ? parseFloat(p.total) : 0;
+        totalHP += hp; totalWarna += warna; grandTotal += parseFloat(p.total);
+
+        rowsHTML += `
+<tr style="background-color: #f8f9fa;">
+    <td style="border:2px solid #333; padding:10px;">${i + 1}</td>
+    <td style="border:2px solid #333; padding:10px;">${p.id}</td>
+    <td style="border:2px solid #333; padding:10px;">${p.name}</td>
+    <td style="border:2px solid #333; padding:10px;">RM ${hp.toFixed(2)}</td>
+    <td style="border:2px solid #333; padding:10px;">RM ${warna.toFixed(2)}</td>
+    <td style="border:2px solid #333; padding:10px; font-weight:500;">${p.paymentDate}</td>
+    <td style="border:2px solid #333; padding:10px;">${p.manualReceipt || ""}</td>
+</tr>`;
+    });
+
+    rowsHTML += `
+<tr style="background: #4e2a7b !important; color: white !important;">
+    <td colspan="3" style="text-align:right; padding:15px; font-weight:bold; font-size:14px; border:2px solid #333;">Jumlah Keseluruhan</td>
+    <td style="padding:15px; font-weight:bold; font-size:14px; border:2px solid #333;">RM ${totalHP.toFixed(2)}</td>
+    <td style="padding:15px; font-weight:bold; font-size:14px; border:2px solid #333;">RM ${totalWarna.toFixed(2)}</td>
+    <td style="padding:15px; font-weight:bold; font-size:14px; border:2px solid #333;">RM ${grandTotal.toFixed(2)}</td>
+    <td style="border:2px solid #333;"></td>
+</tr>`;
+
+    const reportHTML = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Laporan Bayaran Print - ${new Date().toISOString().slice(0,10)}</title>
+<style>body{font-family:Arial,sans-serif;margin:30px;font-size:13px;color:#333}.header{text-align:center;margin-bottom:40px;border-bottom:4px solid #4e2a7b;padding-bottom:30px}.logo{height:80px;margin-bottom:15px}h1{color:#4e2a7b;font-size:28px}.staf-info{display:flex;justify-content:space-between;margin:30px 0;padding:25px;background:#f8f9fa;border-radius:12px}table{width:100%;border-collapse:collapse;margin:30px 0}th,td{border:2px solid #333;padding:12px 8px;text-align:center}th{background:#4e2a7b;color:white;font-weight:bold}.signature{display:flex;justify-content:space-between;margin-top:70px;gap:40px}.sig-box{flex:1;text-align:center;padding:30px;border:3px solid #4e2a7b;border-radius:15px}@page{margin:1.5cm}</style></head>
+<body><div class="header"><img src="https://www.teamcetak.com/wp-content/uploads/2019/03/uitm-universiti-teknologi-mara-logo-png-transparent.png" class="logo"><h1>LAPORAN BAYARAN PRINT</h1><p style="font-size:15px;font-weight:600">Perpustakaan Al-Bukhari, UiTM Cawangan Pahang</p></div>
+<div class="staf-info"><div><img src="https://www.teamcetak.com/wp-content/uploads/2019/03/uitm-universiti-teknologi-mara-logo-png-transparent.png" style="height:60px"><div><strong>Staf Bertugas:</strong> ${stafBertugas}<br><strong>Kerja Normal:</strong> ${stafNormal}<br><strong>Kerja Shift:</strong> ${stafShift}<br><strong>Kerja Lebih Masa:</strong> ${stafLebih}</div></div><div style="text-align:right"><strong>Tarikh Janaan:</strong><br><span style="font-size:18px;font-weight:bold;color:#4e2a7b">${tarikh}</span></div></div>
+<table><thead><tr><th style="width:5%">Bil.</th><th style="width:12%">No Pelajar</th><th style="width:20%">Nama</th><th style="width:10%">RM Hitam<br>Putih</th><th style="width:10%">RM Warna</th><th style="width:16%">Tarikh Bayaran</th><th style="width:17%">No Resit</th></tr></thead><tbody>${rowsHTML}</tbody></table>
+<div class="signature"><div class="sig-box"><div style="font-weight:bold;font-size:16px;margin-bottom:40px;color:#4e2a7b">PENGESAHAN PEGAWAI PERPUSTAKAAN</div><div style="height:1px;border-bottom:2px solid #333;margin:0 auto 20px;width:280px"></div><div style="margin-top:15px;font-size:13px">(Tandatangan & Cop Pegawai)</div></div><div class="sig-box"><div style="font-weight:bold;font-size:16px;margin-bottom:40px;color:#4e2a7b">PENGESAHAN BENDAHARI</div><div style="height:1px;border-bottom:2px solid #333;margin:0 auto 20px;width:280px"></div><div style="margin-top:15px;font-size:13px">(Tandatangan & Cop Bendahari)</div></div></div></body></html>`;
+
+    const blob = new Blob([reportHTML], {type: 'text/html;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Laporan_Print_${new Date().toISOString().slice(0,10)}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+    alert("✅ Laporan dimuat turun!\nBuka HTML → Ctrl+P → Save as PDF");
+}
+
+
+/* ========= EXPORT CSV ========= */
+function exportCSV() {
+    const data = JSON.parse(localStorage.getItem("payments") || "[]");
+    let csv = "Resit,Nama,NoPelajar,Salinan,Kertas,Warna,Jumlah,Tarikh,NoResitManual\n";
+    data.forEach(p => {
+        csv += `"${p.receipt}","${p.name.replace(/"/g,'""')}","${p.id.replace(/"/g,'""')}",${p.copies},"${p.paper.replace(/"/g,'""')}","${p.color}",${p.total},"${p.paymentDate}","${(p.manualReceipt||'').replace(/"/g,'""')}"\n`;
+    });
+    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bayaran_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+/* ========= SHORTCUT KEYS & EVENTS ========= */
+document.addEventListener("keydown", e => {
+    if(e.altKey && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        const login = document.getElementById("loginContainer");
+        if(login.style.display === "none") {
+            login.style.display = "block";
+            document.getElementById("staffPassword").focus();
+        }
+    }
+});
+
+document.getElementById("staffPassword").addEventListener("keydown", e => {
+    if(e.key === "Enter") staffLogin();
+});
+
+/* ========= AUTO INIT & DATA MIGRATION ========= */
+document.addEventListener('DOMContentLoaded', function() {
+    // Migrate old data (add paymentDate if missing)
+    const data = JSON.parse(localStorage.getItem("payments") || "[]");
+    data.forEach(p => {
+        if(!p.paymentDate && p.datetime) {
+            const date = new Date(p.datetime);
+            p.paymentDate = date.toLocaleDateString('ms-MY', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+    });
+    localStorage.setItem("payments", JSON.stringify(data));
+    
+    console.log(`✅ Sistem Bayaran Print UiTM - ${data.length} rekod sedia`);
+});
+
+</script>
+</body>
+</html>
