@@ -682,29 +682,31 @@ function saveEdit() {
     const p = payments[editIndex];
     if (!p || !p._id) return;
     
+    // 🔧 KIRA SEMULA JUMLAH BARU
+    const copies = parseInt(document.getElementById("editCopies").value);
+    const editPaperSelect = document.getElementById("editPaper");
+    const paperPrice = parseFloat(editPaperSelect.value.split("|")[0]);
+    const newTotal = (paperPrice * copies).toFixed(2);
+    
     const newData = {
         name: document.getElementById("editName").value.trim(),
         id: document.getElementById("editStudentId").value.trim(),
-        copies: parseInt(document.getElementById("editCopies").value),
-        paper: document.getElementById("editPaper").options[document.getElementById("editPaper").selectedIndex].text,
+        copies: copies,
+        paper: editPaperSelect.options[editPaperSelect.selectedIndex].text,
         color: document.getElementById("editColor").value,
-        total: payments[editIndex].total, // kekalkan total asal
-        datetime: payments[editIndex].datetime,
-        paymentDate: payments[editIndex].paymentDate
+        total: newTotal,  // ✅ GUNA JUMLAH BARU!
+        datetime: p.datetime,
+        paymentDate: p.paymentDate,
+        manualReceipt: p.manualReceipt || ""
     };
     
     firebase.database().ref("payments/" + p._id).update(newData).then(() => {
         closeEditModal();
-        generateReport();
+        generateReport(); // refresh table + total
+    }).catch(error => {
+        console.error("Error:", error);
+        alert("❌ Error simpan data!");
     });
-}
-
-function deletePayment(index) {
-    const p = payments[index];
-    if (!p || !p._id) return;
-    if (confirm(`Padam rekod ${p.name}?`)) {
-        firebase.database().ref("payments/" + p._id).remove();
-    }
 }
 
 function softReset() {
