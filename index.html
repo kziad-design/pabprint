@@ -345,7 +345,7 @@
         <div class="card" id="loginContainer" style="display:none;">
             <h3 style="margin-top:0; color:#dc3545;">🔐 Login Staf Perpustakaan</h3>
             <label>Password Staf:</label>
-            <input id="staffPassword" type="password" placeholder="Masukkan kata laluan staf">
+           <input id="staffPassword" type="password" placeholder="Masukkan kata laluan staf" onkeydown="if(event.key==='Enter') staffLogin()">
             <button onclick="staffLogin()" style="background:linear-gradient(135deg,#dc3545,#e74c3c);">🔑 Masuk</button>
             <button onclick="cancelStaffLogin()" class="btn-secondary">❌ Batal</button>
             <div style="font-size:10px; color:#666; text-align:center; margin-top:10px;">
@@ -563,6 +563,35 @@
     // Expose functions globally
     window.addPayment = addPayment;
     window.closePaymentPopup = closePaymentPopup;
+// ====== STAFF LOGIN (Tambah ni) ======
+function staffLogin() {
+    if(document.getElementById("staffPassword").value === STAFF_PASSWORD) {
+        document.getElementById("loginContainer").style.display = "none";
+        document.getElementById("adminSection").style.display = "block";
+        document.getElementById("tarikhJanaan").textContent = new Date().toLocaleDateString('ms-MY');
+        // Nanti generateReport kita tambah
+        console.log('✅ Staff login OK');
+    } else {
+        alert("❌ Password salah!");
+        document.getElementById("staffPassword").value = "";
+    }
+}
+
+function cancelStaffLogin() {
+    document.getElementById("loginContainer").style.display = "none";
+    document.getElementById("staffPassword").value = "";
+}
+
+function staffLogout() {
+    document.getElementById("adminSection").style.display = "none";
+}
+
+// Expose ke global
+window.staffLogin = staffLogin;
+window.cancelStaffLogin = cancelStaffLogin;
+window.staffLogout = staffLogout;
+
+
 </script>
 
 
