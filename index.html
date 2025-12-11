@@ -213,16 +213,26 @@
         border-bottom: 3px solid #4e2a7b;
     }
     .staf-panel {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 20px;
-        padding: 20px;
-        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-        border-radius: 12px;
-        border: 2px solid #e9ecef;
-    }
-    .staf-left { display: flex; gap: 20px; align-items: center; }
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    padding: 25px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+}
+.staf-left { 
+    display: block; 
+    gap: 0; 
+    font-size: 12px; /* +2 dari 10 */
+    line-height: 1.6; /* Jarak antara baris */
+}
+.staf-left label {
+    margin-bottom: 8px !important; /* Jarak bawah label */
+    margin-top: 0 !important;
+}
+
     .staf-right { text-align: right; }
     .total-row {
         background: linear-gradient(135deg, #4e2a7b, #6b4e9a) !important;
