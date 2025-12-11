@@ -628,8 +628,11 @@
                     <td>RM ${hp.toFixed(2)}</td>
                     <td>RM ${warna.toFixed(2)}</td>
                     <td style="font-size:11px; font-weight:500;">${payment.paymentDate}</td>
-                    <td><input type="text" value="${payment.manualReceipt || ''}" onblur="updateManualReceipt(${dataIndex}, this.value)" style="width:95%; border:1px solid #ddd; padding:4px; border-radius:4px; font-size:11px;"></td>
-                    <td><button class="action-btn edit-btn" onclick="startEdit(${dataIndex})">Edit</button><button class="action-btn delete-btn" onclick="deletePayment(${dataIndex})">Padam</button></td>
+                    <td><input type="text" value="${payment.manualReceipt || ''}" onblur="updateManualReceipt('${payment._id}', this.value)"
+ style="width:95%; border:1px solid #ddd; padding:4px; border-radius:4px; font-size:11px;"></td>
+                    <td><button class="action-btn edit-btn" onclick="startEdit(${dataIndex})">Edit</button>
+<button class="action-btn delete-btn" onclick="deletePayment('${payment._id}')">Padam</button>
+</td>
                 </tr>`;
         });
 
@@ -651,10 +654,9 @@ function clearDateFilter() {
     generateReport();
 }
 
-function updateManualReceipt(index, value) {
-    const p = payments[index];
-    if (!p || !p._id) return;
-    firebase.database().ref("payments/" + p._id).update({
+function updateManualReceipt(paymentId, value) {
+    if (!value.trim()) return;
+    db.ref("payments/" + paymentId).update({
         manualReceipt: value.trim()
     });
 }
@@ -842,22 +844,22 @@ th{background:#4e2a7b;color:white;font-weight:bold}
     window.closeEditModal = closeEditModal;
     window.saveEdit = saveEdit;
 
-function deletePayment(index) {
-    const p = payments[index];
-    if (!p || !p._id) {
+function deletePayment(paymentId) {
+    const p = payments.find(item => item._id === paymentId);
+    if (!p) {
         alert("❌ Rekod tidak dijumpai!");
         return;
     }
     
     if (confirm(`Padam rekod ${p.name}?`)) {
-        firebase.database().ref("payments/" + p._id).remove()
+        db.ref("payments/" + paymentId).remove()
         .then(() => {
-            console.log("✅ Rekod dipadam dari Firebase!");
-            generateReport(); // auto refresh table
+            console.log("✅ Rekod dipadam!");
+            generateReport();
         })
         .catch(error => {
             console.error("❌ Error:", error);
-            alert("❌ Gagal padam rekod!");
+            alert("❌ Gagal padam!");
         });
     }
 }
