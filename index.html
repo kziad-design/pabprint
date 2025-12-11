@@ -436,13 +436,12 @@
     </div>
 </div>
 
-<script>
-<script type="module">
-    // ====== FIREBASE SETUP ======
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 
+<script>
+    // Firebase config
     const firebaseConfig = {
         apiKey: "AIzaSyCWpeosUEpLAEzM39BRJmwmm8aNDNUfloY",
         authDomain: "pab-printing-system.firebaseapp.com",
@@ -452,26 +451,28 @@
         appId: "1:890265108988:web:052934b1f65570e7c17279"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
-    const paymentsRef = ref(db, "payments");
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+    const paymentsRef = db.ref("payments");
 
     let payments = [];
     let editIndex = null;
     const STAFF_PASSWORD = "1234";
 
     // Auto login anonymous
-    signInAnonymously(auth);
-    onAuthStateChanged(auth, (user) => {
+    auth.signInAnonymously().catch(console.error);
+    auth.onAuthStateChanged((user) => {
         if (user) {
             console.log('✅ Firebase login OK');
             loadPayments();
         }
     });
 
+    // Load data real-time
     function loadPayments() {
-        onValue(paymentsRef, (snapshot) => {
+        paymentsRef.on('value', (snapshot) => {
             const data = snapshot.val() || {};
             payments = Object.entries(data).map(([key, value]) => ({
                 ...value,
@@ -481,8 +482,8 @@
         });
     }
 
-    // TAMBAH BAYARAN KE FIREBASE
-    window.addPayment = function() {
+    // Tambah payment
+    function addPayment() {
         const name = document.getElementById("name").value.trim();
         const id = document.getElementById("studentId").value.trim();
         const copies = parseInt(document.getElementById("copies").value);
@@ -512,15 +513,15 @@
             manualReceipt: ""
         };
 
-        const newRef = push(paymentsRef);
-        set(newRef, payment).then(() => {
+        // Simpan ke Firebase
+        paymentsRef.push(payment).then(() => {
             console.log('✅ Data masuk Firebase!');
             document.getElementById("name").value = "";
             document.getElementById("studentId").value = "";
             document.getElementById("copies").value = 1;
         }).catch((error) => {
             console.error('❌ Error:', error);
-            alert('Error simpan data!');
+            alert('Error: ' + error.message);
         });
 
         // Popup
@@ -538,15 +539,16 @@
             box.classList.remove("popup-show");
             setTimeout(() => popup.style.display = "none", 400);
         }, 3000);
-    };
+    }
 
-    window.closePaymentPopup = function(){
+    function closePaymentPopup(){
         const popup = document.getElementById("paymentPopup");
         const box = document.getElementById("popupBox");
         box.classList.remove("popup-show");
         setTimeout(() => popup.style.display = "none", 400);
-    };
+    }
 
+    // Shortcut Alt+S
     document.addEventListener("keydown", e => {
         if(e.altKey && e.key.toLowerCase() === "s") {
             e.preventDefault();
@@ -557,6 +559,12 @@
             }
         }
     });
+
+    // Expose functions globally
+    window.addPayment = addPayment;
+    window.closePaymentPopup = closePaymentPopup;
+</script>
+
 
 </script>
 </body>
