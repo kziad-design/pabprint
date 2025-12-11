@@ -586,6 +586,84 @@ function staffLogout() {
     document.getElementById("adminSection").style.display = "none";
 }
 
+// ====== GENERATE REPORT DARI FIREBASE ======
+function generateReport() {
+    const tbody = document.getElementById("reportBody");
+    tbody.innerHTML = "<tr><td colspan='8' style='padding:50px;'><div>⏳ Memuatkan data...</div></td></tr>";
+
+    const allData = payments || [];
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+
+    // Filter tarikh
+    let filtered = allData.filter(p => {
+        if (!startDate && !endDate) return true;
+        
+        const paymentDate = new Date(p.datetime);
+        paymentDate.setHours(0, 0, 0, 0);
+        
+        const start = startDate ? new Date(startDate + 'T00:00:00') : null;
+        const end = endDate ? new Date(endDate + 'T23:59:59.999') : null;
+        
+        return (!start || paymentDate >= start) && (!end || paymentDate <= end);
+    });
+
+    document.getElementById("tarikhJanaan").textContent = new Date().toLocaleDateString('ms-MY');
+
+    if(filtered.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='8' style='color:#999; font-style:italic; padding:40px;'>Tiada rekod dalam julat tarikh ini</td></tr>";
+        return;
+    }
+
+    let totalHP = 0, totalWarna = 0, grandTotal = 0;
+    tbody.innerHTML = "";
+
+    filtered.forEach((payment, index) => {
+        const hp = payment.color === "Hitam Putih" ? parseFloat(payment.total) : 0;
+        const warna = payment.color !== "Hitam Putih" ? parseFloat(payment.total) : 0;
+
+        totalHP += hp;
+        totalWarna += warna;
+        grandTotal += parseFloat(payment.total);
+
+        const dataIndex = allData.findIndex(p => p._id === payment._id);
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${index + 1}</td>
+                <td style="font-size:11px;">${payment.id}</td>
+                <td style="font-size:11px;">${payment.name}</td>
+                <td>RM ${hp.toFixed(2)}</td>
+                <td>RM ${warna.toFixed(2)}</td>
+                <td style="font-size:11px; font-weight:500;">${payment.paymentDate}</td>
+                <td>
+                    <input type="text" value="${payment.manualReceipt || ''}" 
+                           onblur="updateManualReceipt(${dataIndex}, this.value)"
+                           style="width:95%; border:1px solid #ddd; padding:4px; border-radius:4px; font-size:11px;">
+                </td>
+                <td>
+                    <button class="action-btn edit-btn" onclick="startEdit(${dataIndex})">Edit</button>
+                    <button class="action-btn delete-btn" onclick="deletePayment(${dataIndex})">Padam</button>
+                </td>
+            </tr>`;
+    });
+
+    // Total row
+    tbody.innerHTML += `
+        <tr class="total-row">
+            <td colspan="3" style="text-align:right; padding-right:15px;">Jumlah Keseluruhan</td>
+            <td>RM ${totalHP.toFixed(2)}</td>
+            <td>RM ${totalWarna.toFixed(2)}</td>
+            <td>RM ${grandTotal.toFixed(2)}</td>
+            <td colspan="2"></td>
+        </tr>`;
+}
+
+// Expose global
+window.generateReport = generateReport;
+
+
+
 // Expose ke global
 window.staffLogin = staffLogin;
 window.cancelStaffLogin = cancelStaffLogin;
