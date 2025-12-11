@@ -841,6 +841,27 @@ th{background:#4e2a7b;color:white;font-weight:bold}
     window.startEdit = startEdit;
     window.closeEditModal = closeEditModal;
     window.saveEdit = saveEdit;
+
+function deletePayment(index) {
+    const p = payments[index];
+    if (!p || !p._id) {
+        alert("❌ Rekod tidak dijumpai!");
+        return;
+    }
+    
+    if (confirm(`Padam rekod ${p.name}?`)) {
+        firebase.database().ref("payments/" + p._id).remove()
+        .then(() => {
+            console.log("✅ Rekod dipadam dari Firebase!");
+            generateReport(); // auto refresh table
+        })
+        .catch(error => {
+            console.error("❌ Error:", error);
+            alert("❌ Gagal padam rekod!");
+        });
+    }
+}
+
     window.deletePayment = deletePayment;
     window.softReset = softReset;
     window.exportCSV = exportCSV;
