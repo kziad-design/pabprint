@@ -367,8 +367,7 @@
                 <div class="staf-left">
                     <img src="https://www.teamcetak.com/wp-content/uploads/2019/03/uitm-universiti-teknologi-mara-logo-png-transparent.png" style="height:50px;">
                     <div>
-                        <label style="margin-top:0;">Staf Bertugas:</label>
-                        <input id="inputStafBertugas" type="text" placeholder="Nama staf bertugas">
+                        <label style="margin-top:0; font-weight: bold; color: #4e2a7b;">Staf Bertugas:</label>
                         <label>Kerja Normal:</label>
                         <input id="inputStafNormal" type="text" placeholder="Nama staf normal">
                     </div>
@@ -727,7 +726,7 @@ function exportCSV() {
 
 function downloadReport() {
     // Ambil info staf
-    const stafBertugas = document.getElementById("inputStafBertugas").value || "__________";
+    const stafBertugas = "";  // Kosong untuk Staf Bertugas
     const stafNormal = document.getElementById("inputStafNormal").value || "__________";
     const stafShift = document.getElementById("inputStafShift").value || "__________";
     const stafLebih = document.getElementById("inputStafLebihMasa").value || "__________";
