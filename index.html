@@ -644,18 +644,8 @@
             </tr>`;
     }
 
-function clearDateFilter() {
-    document.getElementById("startDate").value = "";
-    document.getElementById("endDate").value = "";
-    generateReport();
-}
 
-function updateManualReceipt(index, value) {
-    const p = payments[index];
-    if (!p || !p._id) return;
-    firebase.database().ref("payments/" + p._id).update({ manualReceipt: value.trim() });
-}
-// ====== FUNGSI LAIN UNTUK FILTER TARIKH ======
+// ====== FUNGSI FILTER TARIKH & RESIT MANUAL ======
 function clearDateFilter() {
     document.getElementById("startDate").value = "";
     document.getElementById("endDate").value = "";
@@ -688,7 +678,6 @@ function updateManualReceipt(index, value) {
     window.exportCSV = exportCSV;
     window.downloadReport = downloadReport;
 
-</script>
 
 </script>
 </body>
