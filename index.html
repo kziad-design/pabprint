@@ -251,6 +251,51 @@
         .wrap { flex-direction: column; }
         #leftPanel { width: 100%; }
     }
+    .total-row {
+        background: linear-gradient(135deg, #4e2a7b, #6b4e9a) !important;
+        color: white !important;
+        font-weight: bold !important;
+        font-size: 13px;
+    }
+
+    /* ========== NOTA POPUP CSS ========== */
+    #notaPopup {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.7);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        backdrop-filter: blur(5px);
+    }
+    #notaBox {
+        background: white;
+        padding: 25px;
+        width: 90%;
+        max-width: 450px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        transform: scale(0.8);
+        opacity: 0;
+        transition: all 0.3s;
+        color: #333;
+    }
+    .nota-show { transform: scale(1) !important; opacity: 1 !important; }
+    .nota-text {
+        font-size: 18px;
+        font-weight: bold;
+        color: #dc3545;
+        margin: 20px 0;
+        padding: 15px;
+        background: #ffebee;
+        border-radius: 10px;
+        border-left: 5px solid #dc3545;
+    }
+
+    @media print {
+
 </style>
 </head>
 <body>
@@ -299,6 +344,16 @@
         <div style="display:flex; gap:12px; margin-top:20px;">
             <button onclick="saveEdit()" style="flex:1; background:linear-gradient(135deg,#28a745,#20c997);">💾 Simpan</button>
             <button onclick="closeEditModal()" class="btn-secondary" style="flex:1;">❌ Tutup</button>
+        </div>
+    </div>
+</div>
+<!-- =================== POPUP NOTA =================== -->
+<div id="notaPopup">
+    <div id="notaBox">
+        <h3 style="margin-top:0; color:#dc3545;">📝 Nota Pelanggan</h3>
+        <div id="notaContent" class="nota-text">Tiada nota</div>
+        <div style="display:flex; gap:12px; margin-top:20px;">
+            <button onclick="closeNotaPopup()" style="flex:1; background:linear-gradient(135deg,#28a745,#20c997);">✅ OK</button>
         </div>
     </div>
 </div>
@@ -432,12 +487,14 @@
                             <th style="width:10%;">RM Hitam<br>Putih</th>
                             <th style="width:10%;">RM Warna</th>
                             <th style="width:16%;">Tarikh Bayaran</th> <!-- TAMBAH KOLUM TARIKH -->
-                            <th style="width:12%;">No Resit<br>(Manual)</th>
-                            <th style="width:15%;">Tindakan</th>
+                            <th style="width:10%;">No Resit<br>(Manual)</th>
+<th style="width:10%;">Nota<br>(Internal)</th>
+<th style="width:12%;">Tindakan</th>
+
                         </tr>
                     </thead>
                     <tbody id="reportBody">
-                        <tr><td colspan="8" style="color:#999; font-style:italic; padding:40px; font-size:14px;">Tiada data. Klik Generate Report untuk paparan lengkap.</td></tr>
+                        <tr><td colspan="9" style="color:#999; font-style:italic; padding:40px; font-size:14px;">Tiada data. Klik Generate Report untuk paparan lengkap.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -596,7 +653,8 @@
     // ====== GENERATE REPORT DARI FIREBASE ======
     function generateReport() {
         const tbody = document.getElementById("reportBody");
-        tbody.innerHTML = "<tr><td colspan='8' style='padding:50px;'><div>⏳ Memuatkan data...</div></td></tr>";
+       tbody.innerHTML = "<tr><td colspan='9' style='padding:50px;'><div>⏳ Memuatkan data...</div></td></tr>";
+
 
         const allData = payments || [];
         const startDate = document.getElementById("startDate").value;
@@ -614,7 +672,8 @@
         document.getElementById("tarikhJanaan").textContent = new Date().toLocaleDateString('ms-MY');
 
         if(filtered.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='8' style='color:#999; font-style:italic; padding:40px;'>Tiada rekod dalam julat tarikh ini</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='9' style='color:#999; font-style:italic; padding:40px;'>Tiada rekod dalam julat tarikh ini</td></tr>";
+
             return;
         }
 
@@ -631,19 +690,23 @@
             const dataIndex = allData.findIndex(p => p._id === payment._id);
 
             tbody.innerHTML += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td style="font-size:11px;">${payment.id}</td>
-                    <td style="font-size:11px;">${payment.name}</td>
-                    <td>RM ${hp.toFixed(2)}</td>
-                    <td>RM ${warna.toFixed(2)}</td>
-                    <td style="font-size:11px; font-weight:500;">${payment.paymentDate}</td>
-                    <td><input type="text" value="${payment.manualReceipt || ''}" onblur="updateManualReceipt('${payment._id}', this.value)"
- style="width:95%; border:1px solid #ddd; padding:4px; border-radius:4px; font-size:11px;"></td>
-                    <td><button class="action-btn edit-btn" onclick="startEdit(${dataIndex})">Edit</button>
-<button class="action-btn delete-btn" onclick="deletePayment('${payment._id}')">Padam</button>
-</td>
-                </tr>`;
+    <tr>
+        <td>${index + 1}</td>
+        <td style="font-size:11px;">${payment.id}</td>
+        <td style="font-size:11px;">${payment.name}</td>
+        <td>RM ${hp.toFixed(2)}</td>
+        <td>RM ${warna.toFixed(2)}</td>
+        <td style="font-size:11px; font-weight:500;">${payment.paymentDate}</td>
+        <td><input type="text" value="${payment.manualReceipt || ''}" onblur="updateManualReceipt('${payment._id}', this.value)" style="width:95%; border:1px solid #ddd; padding:4px; border-radius:4px; font-size:11px;"></td>
+                <td><input type="text" value="${payment.nota || ''}" onblur="updateNota('${payment._id}', this.value)" style="width:95%; border:1px solid #ddd; padding:4px; border-radius:4px; font-size:11px;"></td>
+        <td>
+            <button class="action-btn edit-btn" onclick="startEdit(${dataIndex})" title="Edit">Edit</button>
+            <button class="action-btn delete-btn" onclick="deletePayment('${payment._id}')" title="Padam">Padam</button>
+            <button class="action-btn" style="background:#dc3545;color:white;font-size:10px;padding:4px 6px;" onclick="showNota('${payment._id}')" title="Lihat Nota">📝</button>
+        </td>
+
+    </tr>`;
+
         });
 
         tbody.innerHTML += `
@@ -652,7 +715,7 @@
                 <td>RM ${totalHP.toFixed(2)}</td>
                 <td>RM ${totalWarna.toFixed(2)}</td>
                 <td>RM ${grandTotal.toFixed(2)}</td>
-                <td colspan="2"></td>
+                <td colspan="3"></td>
             </tr>`;
     }
 
@@ -664,12 +727,71 @@ function clearDateFilter() {
     generateReport();
 }
 
-function updateManualReceipt(paymentId, value) {
+
+    function updateManualReceipt(paymentId, value) {
     if (!value.trim()) return;
-    db.ref("payments/" + paymentId).update({
-        manualReceipt: value.trim()
-    });
+    db.ref("payments/" + paymentId).update({ manualReceipt: value.trim() });
 }
+
+function updateNota(paymentId, nota) {
+    if (!paymentId) return;
+    
+    firebase.database().ref("payments/" + paymentId).update({ 
+        nota: nota.trim() 
+    }).then(() => {
+        console.log("✅ Nota dikemaskini!");
+        // Kemaskini array local
+        const paymentIndex = payments.findIndex(p => p._id === paymentId);
+        if (paymentIndex !== -1) {
+            payments[paymentIndex].nota = nota.trim();
+        }
+    }).catch(error => {
+        console.error("❌ Ralat kemaskini nota:", error);
+        alert("Gagal mengemaskini nota!");
+    });
+}window.updateNota = updateNota;
+window.updateManualReceipt = updateManualReceipt;
+window.updateNota = updateNota;
+window.updateManualReceipt = updateManualReceipt;
+
+// ========== NOTA POPUP FUNCTIONS ==========
+function showNota(paymentId) {
+    const payment = payments.find(p => p._id === paymentId);
+    if (!payment) {
+        document.getElementById("notaContent").innerHTML = "Rekod tidak dijumpai";
+    } else {
+        document.getElementById("notaContent").innerHTML = `
+            <div style="font-size:16px; margin-bottom:15px; padding:15px; background:#f8f9fa; border-radius:8px; border-left:4px solid #4e2a7b;">
+                "${payment.nota || 'Tiada nota'}"
+            </div>
+            <div style="font-size:12px; color:#666; margin-bottom:20px; background:#f1f1f1; padding:10px; border-radius:6px;">
+                <div>👤 <strong>Nama:</strong> ${payment.name}</div>
+                <div>🆔 <strong>No ID:</strong> ${payment.id}</div>
+            </div>
+            <button onclick="deletePayment('${paymentId}')" 
+                    style="background:#dc3545; color:white; border:none; padding:10px; border-radius:6px; width:100%; cursor:pointer;">
+                🗑️ Padam Nota Ini
+            </button>`;
+    }
+    
+    const popup = document.getElementById("notaPopup");
+    popup.style.display = "flex";
+    setTimeout(() => {
+        document.getElementById("notaBox").classList.add("nota-show");
+    }, 100);
+}
+
+function closeNotaPopup() {
+    const popup = document.getElementById("notaPopup");
+    const box = document.getElementById("notaBox");
+    box.classList.remove("nota-show");
+    setTimeout(() => {
+        popup.style.display = "none";
+    }, 300);
+}
+window.showNota = showNota;
+window.closeNotaPopup = closeNotaPopup;
+
 
 // ====== FUNGSI EDIT, DELETE, EXPORT ======
 function startEdit(index) {
@@ -692,8 +814,7 @@ function closeEditModal() {
 function saveEdit() {
     if (editIndex === null) return;
     const p = payments[editIndex];
-    if (!p || !p._id) return;
-    
+
     // 🔧 KIRA SEMULA JUMLAH BARU
     const copies = parseInt(document.getElementById("editCopies").value);
     const editPaperSelect = document.getElementById("editPaper");
@@ -709,7 +830,9 @@ function saveEdit() {
         total: newTotal,  // ✅ GUNA JUMLAH BARU!
         datetime: p.datetime,
         paymentDate: p.paymentDate,
-        manualReceipt: p.manualReceipt || ""
+                manualReceipt: p.manualReceipt || "",
+        nota: p.nota || ""
+
     };
     
     firebase.database().ref("payments/" + p._id).update(newData).then(() => {
@@ -722,7 +845,7 @@ function saveEdit() {
 }
 
 function softReset() {
-    document.getElementById("reportBody").innerHTML = "<tr><td colspan='8' style='color:#999; font-style:italic; padding:40px;'>Tiada data. Klik Generate Report.</td></tr>";
+    document.getElementById("reportBody").innerHTML = "<tr><td colspan='9' style='color:#999; font-style:italic; padding:40px;'>Tiada data. Klik Generate Report.</td></tr>";
 }
 
 function exportCSV() {
@@ -740,18 +863,17 @@ function exportCSV() {
 
 function downloadReport() {
     // Ambil info staf
-    const stafBertugas = "";  // Kosong untuk Staf Bertugas
     const stafNormal = document.getElementById("inputStafNormal").value || "__________";
     const stafShift = document.getElementById("inputStafShift").value || "__________";
     const stafLebih = document.getElementById("inputStafLebihMasa").value || "__________";
     const tarikh = document.getElementById("tarikhJanaan").textContent || new Date().toLocaleDateString('ms-MY');
 
-    // ✅ GUNA payments dari FIREBASE (bukan localStorage)
+    // Ambil semua data dari Firebase
     const allData = payments || [];
     const startDate = document.getElementById("startDate").value;
     const endDate = document.getElementById("endDate").value;
 
-    // Filter tarikh SAMA macam generateReport()
+    // Filter data berdasarkan tarikh
     let filtered = allData.filter(p => {
         if (!startDate && !endDate) return true;
         const paymentDate = new Date(p.datetime);
@@ -761,12 +883,15 @@ function downloadReport() {
         return (!start || paymentDate >= start) && (!end || paymentDate <= end);
     });
 
-    if(filtered.length === 0) {
+    // Menapis baris yang mempunyai nota
+    filtered = filtered.filter(p => !p.nota || p.nota.trim() === ""); // Hanya ambil data tanpa nota
+
+    if (filtered.length === 0) {
         alert("Tiada data untuk laporan berdasarkan filter semasa.");
         return;
     }
 
-    // Build table rows
+    // Membina baris untuk laporan
     let rowsHTML = "";
     let totalHP = 0, totalWarna = 0, grandTotal = 0;
 
@@ -787,6 +912,7 @@ function downloadReport() {
         </tr>`;
     });
 
+    // Menambah jumlah keseluruhan
     rowsHTML += `
     <tr style="background: #4e2a7b !important; color: white !important;">
         <td colspan="3" style="text-align:right; padding:15px; font-weight:bold; font-size:14px; border:2px solid #333;">Jumlah Keseluruhan</td>
@@ -796,24 +922,17 @@ function downloadReport() {
         <td style="border:2px solid #333;"></td>
     </tr>`;
 
-    // HTML lengkap (sama macam kod asal)
+    // HTML lengkap untuk laporan
     const reportHTML = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Laporan Bayaran Print - ${new Date().toISOString().slice(0,10)}</title>
+<html><head><meta charset="UTF-8"><title>Laporan Bayaran Print - ${new Date().toISOString().slice(0, 10)}</title>
 <style>
 body{font-family:Arial,sans-serif;margin:30px;font-size:13px;color:#333}
 .header{text-align:center;margin-bottom:40px;border-bottom:4px solid #4e2a7b;padding-bottom:30px}
 .logo{height:80px;margin-bottom:15px}
 h1{color:#4e2a7b;font-size:28px}
-.staf-info{display:flex;justify-content:space-between;margin:30px 0;padding:25px;background:#f8f9fa;border-radius:12px}
-.staf-info div:first-child{font-size:13px;line-height:1.6;}
-.staf-info div:first-child strong{font-weight:bold;color:#4e2a7b;}
-
 table{width:100%;border-collapse:collapse;margin:30px 0}
 th,td{border:2px solid #333;padding:12px 8px;text-align:center}
 th{background:#4e2a7b;color:white;font-weight:bold}
-.signature{display:flex;justify-content:space-between;margin-top:70px;gap:40px}
-.sig-box{flex:1;text-align:center;padding:30px;border:3px solid #4e2a7b;border-radius:15px}
-@page{margin:1.5cm}
 </style></head>
 <body>
 <div class="header">
@@ -821,33 +940,35 @@ th{background:#4e2a7b;color:white;font-weight:bold}
     <h1>LAPORAN BAYARAN PRINT</h1>
     <p style="font-size:15px;font-weight:600">Perpustakaan Al-Bukhari, UiTM Cawangan Pahang</p>
 </div>
-<div class="staf-info">
-    <div>
-    <div><strong>STAF BERTUGAS:</strong> ${stafBertugas}<br><strong>Kerja Normal:</strong> ${stafNormal}<br><strong>Kerja Shift:</strong> ${stafShift}<br><strong>Kerja Lebih Masa:</strong> ${stafLebih}</div></div>
-    <div style="text-align:right"><strong>Tarikh Janaan:</strong><br><span style="font-size:18px;font-weight:bold;color:#4e2a7b">${tarikh}</span></div>
-</div>
 <table><thead><tr><th style="width:5%">Bil.</th><th style="width:12%">No Pelajar</th><th style="width:20%">Nama</th><th style="width:10%">RM Hitam<br>Putih</th><th style="width:10%">RM Warna</th><th style="width:16%">Tarikh Bayaran</th><th style="width:17%">No Resit</th></tr></thead><tbody>${rowsHTML}</tbody></table>
-<div class="signature">
-    <div class="sig-box"><div style="font-weight:bold;font-size:16px;margin-bottom:40px;color:#4e2a7b">PENGESAHAN PEGAWAI PERPUSTAKAAN</div><div style="height:1px;border-bottom:2px solid #333;margin:0 auto 20px;width:280px"></div><div style="margin-top:15px;font-size:13px">(Tandatangan & Cop Pegawai)</div></div>
-    <div class="sig-box"><div style="font-weight:bold;font-size:16px;margin-bottom:40px;color:#4e2a7b">PENGESAHAN BENDAHARI</div><div style="height:1px;border-bottom:2px solid #333;margin:0 auto 20px;width:280px"></div><div style="margin-top:15px;font-size:13px">(Tandatangan & Cop Bendahari)</div></div>
+
+<div style="margin-top: 50px; display: flex; justify-content: space-between; padding: 0 50px;">
+    <div style="text-align: center; width: 45%;">
+        <div style="font-weight:bold;font-size:16px;margin-bottom:40px;color:#4e2a7b">PENGESAHAN PEGAWAI PERPUSTAKAAN</div>
+        <div style="height:1px;border-bottom:2px solid #333;margin:0 auto 20px;width:280px"></div>
+        <div style="margin-top:15px;font-size:13px">(Tandatangan & Cop Pegawai)</div>
+    </div>
+    <div style="text-align: center; width: 45%;">
+        <div style="font-weight:bold;font-size:16px;margin-bottom:40px;color:#4e2a7b">PENGESAHAN BENDAHARI</div>
+        <div style="height:1px;border-bottom:2px solid #333;margin:0 auto 20px;width:280px"></div>
+        <div style="margin-top:15px;font-size:13px">(Tandatangan & Cop Bendahari)</div>
+    </div>
 </div>
 </body></html>`;
 
-    const blob = new Blob([reportHTML], {type: 'text/html;charset=utf-8'});
+    const blob = new Blob([reportHTML], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Laporan_Print_${new Date().toISOString().slice(0,10)}.html`;
+    a.download = `Laporan_Print_${new Date().toISOString().slice(0, 10)}.html`;
     a.click();
     URL.revokeObjectURL(url);
-    alert("✅ Laporan dimuat turun!\nBuka HTML → Ctrl+P → Save as PDF");
+    alert("✅ Laporan dimuat turun!\nBuka HTML → Ctrl+P → Simpan sebagai PDF");
 }
-
-
     // ====== EXPOSE ALL FUNCTIONS TO GLOBAL (AKHIR SAJA) ======
     window.addPayment = addPayment;
     window.closePaymentPopup = closePaymentPopup;
-    window.staffLogin = staffLogin;sTAF
+    window.staffLogin = staffLogin;
     window.cancelStaffLogin = cancelStaffLogin;
     window.staffLogout = staffLogout;
     window.generateReport = generateReport;
@@ -858,21 +979,40 @@ th{background:#4e2a7b;color:white;font-weight:bold}
     window.saveEdit = saveEdit;
 
 function deletePayment(paymentId) {
-    const p = payments.find(item => item._id === paymentId);
-    if (!p) {
-        alert("❌ Rekod tidak dijumpai!");
+    if (!confirm('Adakah anda pasti mahu padam rekod ini?')) return;
+    
+    // Dapatkan data payment yang ingin dipadam
+    const paymentToDelete = payments.find(p => p._id === paymentId);
+    if (!paymentToDelete) {
+        alert('Rekod tidak dijumpai!');
         return;
     }
-    
-    if (confirm(`Padam rekod ${p.name}?`)) {
-        db.ref("payments/" + paymentId).remove()
+
+    // Hapus nota sahaja jika ada nota, hapus keseluruhan rekod jika tiada nota
+    if (paymentToDelete.nota) {
+        // Hanya padam nota, simpan rekod lain
+        firebase.database().ref("payments/" + paymentId).update({ 
+            nota: ""  // Set nota kepada kosong
+        })
         .then(() => {
-            console.log("✅ Rekod dipadam!");
-            generateReport();
+            console.log("✅ Nota berjaya dipadam!");
+            generateReport(); // Segarkan jadual
+            closeNotaPopup(); // Tutup popup nota jika terbuka
         })
         .catch(error => {
-            console.error("❌ Error:", error);
-            alert("❌ Gagal padam!");
+            console.error("❌ Ralat:", error);
+            alert("❌ Gagal memadam nota!");
+        });
+    } else {
+        // Padam keseluruhan rekod
+        firebase.database().ref("payments/" + paymentId).remove()
+        .then(() => {
+            console.log("✅ Rekod berjaya dipadam!");
+            generateReport(); // Segarkan jadual
+        })
+        .catch(error => {
+            console.error("❌ Ralat:", error);
+            alert("❌ Gagal memadam rekod!");
         });
     }
 }
